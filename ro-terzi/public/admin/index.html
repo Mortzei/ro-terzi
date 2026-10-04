@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>RO Terzi · Yönetim Paneli</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+:root{--bg:#0a0a0a;--card:#141414;--line:#2a2a2a;--gold:#c8a95f;--txt:#f5f5f5;--mut:#9a9a9a;--red:#e5534b;--grn:#3fb950}
+*{box-sizing:border-box;margin:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding-bottom:96px;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+header{display:flex;justify-content:space-between;align-items:center;padding:.9rem 1rem;border-bottom:1px solid var(--line)}
+header b{color:var(--gold);font-size:1.15rem;letter-spacing:.5px}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:.4rem;overflow-x:auto;padding:.6rem 1rem;border-bottom:1px solid var(--line);scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;background:var(--card);color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:.6rem 1rem;min-height:44px;font:inherit;font-size:.95rem;cursor:pointer;white-space:nowrap}
+nav button.on{color:#000;background:var(--gold);border-color:var(--gold);font-weight:600}
+nav .badge{background:var(--red);color:#fff;border-radius:999px;padding:0 .45rem;font-size:.75rem;margin-left:.3rem}
+main{max-width:860px;margin:0 auto;padding:1rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1rem;margin-bottom:.9rem}
+.card.pending{border-color:var(--gold)}
+label{display:block;font-size:.8rem;color:var(--mut);margin:.7rem 0 .25rem}
+input,textarea,select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);padding:.75rem .85rem;border-radius:8px;font:inherit;font-size:16px}
+textarea{min-height:92px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
+.btn{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:.6rem .9rem;min-height:44px;font:inherit;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;justify-content:center}
+.btn.gold{background:var(--gold);color:#000;border-color:var(--gold);font-weight:600}
+.btn.ok{color:var(--grn);border-color:var(--grn)}
+.btn.del{color:var(--red);border-color:var(--red)}
+.row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
+.meta{color:var(--mut);font-size:.8rem;margin-bottom:.4rem}
+.tag{font-size:.7rem;border-radius:4px;padding:.1rem .45rem;margin-left:.4rem;background:var(--gold);color:#000}
+.tag.live{background:var(--grn);color:#000}
+h2{font-size:1.1rem;margin:.2rem 0 .8rem;font-weight:600}
+.hint{color:var(--mut);font-size:.85rem;margin-bottom:.9rem;line-height:1.4}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.9rem}
+.grid .card{margin:0}
+.thumb{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;background:#000}
+.icopick{display:flex;gap:.6rem;align-items:center}
+.icopick i{font-size:1.4rem;color:var(--gold);width:2rem;text-align:center}
+#bar{position:fixed;left:0;right:0;bottom:0;background:rgba(10,10,10,.96);border-top:1px solid var(--line);padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:6}
+#bar .btn{width:100%;max-width:860px}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--gold);color:#000;padding:.7rem 1.1rem;border-radius:8px;font-weight:600;z-index:9;max-width:90vw}
+#toast.err{background:var(--red);color:#fff}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+#login .card{width:100%;max-width:380px;padding:1.6rem}
+#login h1{color:var(--gold);font-weight:500;margin-bottom:.3rem}
+.empty{color:var(--mut);text-align:center;padding:2rem 0}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <form class="card" id="lf">
+    <h1>RO Terzi</h1>
+    <p class="hint">Yönetim paneli girişi</p>
+    <label for="pw">Şifre</label>
+    <input id="pw" type="password" autocomplete="current-password" required>
+    <button class="btn gold" style="width:100%;margin-top:1rem" type="submit">Giriş Yap</button>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header><b>RO Terzi · Panel</b><div><a class="btn" href="/" target="_blank"><i class="fas fa-external-link-alt"></i> Siteyi gör</a> <button class="btn" id="out"><i class="fas fa-sign-out-alt"></i></button></div></header>
+  <nav id="tabs"></nav>
+  <main id="view"></main>
+  <div id="bar" hidden><button class="btn gold" id="save"><i class="fas fa-save"></i> Değişiklikleri Kaydet</button></div>
+</div>
+<div id="toast" hidden></div>
+
+<script>
+const ICONS = ['tshirt','cut','drafting-compass','ruler-combined','user-tie','gem','star','award','crown','magic','ring','shopping-bag'];
+const FIELDS = [
+  ['heroTop','Ana başlık – 1. satır','i'],['heroGold','Ana başlık – altın renkli kısım','i'],['heroBottom','Ana başlık – son kelime','i'],
+  ['heroText','Ana sayfa alt metni','t'],['about1','Hakkımızda – 1. paragraf','t'],['about2','Hakkımızda – 2. paragraf','t'],
+  ['phone','Telefon','i'],['email','E-posta','i'],['address','Adres','t'],['whatsapp','WhatsApp numarası (905xxxxxxxxx)','i']];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S = null, tab = 'comments', token = sessionStorage.getItem('t');
+
+function toast(m, err) { const t = $('#toast'); t.textContent = m; t.className = err ? 'err' : ''; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2600); }
+async function api(p, method = 'GET', body) {
+  const r = await fetch('/api/' + p, { method, headers: { 'content-type': 'application/json', authorization: 'Bearer ' + token }, body: body ? JSON.stringify(body) : undefined });
+  if (r.status === 401 && p !== 'login') { logout(); throw new Error('Oturum süresi doldu'); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Hata');
+  return j;
+}
+function logout() { sessionStorage.removeItem('t'); token = null; $('#app').hidden = true; $('#login').hidden = false; }
+async function start() {
+  try { S = await api('admin/data'); } catch { return; }
+  $('#login').hidden = true; $('#app').hidden = false; render();
+}
+
+$('#lf').onsubmit = async e => {
+  e.preventDefault();
+  const b = e.target.querySelector('button'); b.disabled = true;
+  try { const j = await api('login', 'POST', { password: $('#pw').value }); token = j.token; sessionStorage.setItem('t', token); $('#pw').value = ''; await start(); }
+  catch (er) { toast(er.message, 1); }
+  b.disabled = false;
+};
+$('#out').onclick = logout;
+
+const TABS = [['comments','Yorumlar'],['services','Hizmetler'],['gallery','Galeri'],['content','Metinler & İletişim']];
+function render() {
+  const pend = S.comments.filter(c => !c.approved).length;
+  $('#tabs').innerHTML = TABS.map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${n}${k === 'comments' && pend ? `<span class="badge">${pend}</span>` : ''}</button>`).join('');
+  $('#bar').hidden = tab === 'comments';
+  const v = $('#view');
+  if (tab === 'comments') v.innerHTML = vComments();
+  if (tab === 'services') v.innerHTML = vServices();
+  if (tab === 'gallery') v.innerHTML = vGallery();
+  if (tab === 'content') v.innerHTML = vContent();
+}
+$('#tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b) { tab = b.dataset.tab; render(); scrollTo(0, 0); } };
+
+function vComments() {
+  const list = [...S.comments].sort((a, b) => a.approved - b.approved);
+  if (!list.length) return '<p class="empty">Henüz yorum yok.</p>';
+  return '<p class="hint">Yeni yorumlar önce burada bekler; "Onayla" dediğinizde sitede görünür.</p>' + list.map(c => `
+    <div class="card ${c.approved ? '' : 'pending'}">
+      <div class="meta">${esc(new Date(c.date).toLocaleString('tr-TR'))}<span class="tag ${c.approved ? 'live' : ''}">${c.approved ? 'Yayında' : 'Onay bekliyor'}</span></div>
+      <b>${esc(c.name)}</b>
+      <p style="margin-top:.4rem;line-height:1.5;white-space:pre-wrap">${esc(c.text)}</p>
+      <div class="row">
+        ${c.approved ? `<button class="btn" data-act="unapprove" data-id="${esc(c.id)}"><i class="fas fa-eye-slash"></i> Yayından kaldır</button>` : `<button class="btn ok" data-act="approve" data-id="${esc(c.id)}"><i class="fas fa-check"></i> Onayla</button>`}
+        <button class="btn del" data-act="delete" data-id="${esc(c.id)}"><i class="fas fa-trash"></i> Sil</button>
+      </div></div>`).join('');
+}
+
+const mv = (p, i) => `<button class="btn" data-mv="${p}:${i}:-1" aria-label="Yukarı"><i class="fas fa-arrow-up"></i></button><button class="btn" data-mv="${p}:${i}:1" aria-label="Aşağı"><i class="fas fa-arrow-down"></i></button><button class="btn del" data-rm="${p}:${i}"><i class="fas fa-trash"></i> Sil</button>`;
+
+function vServices() {
+  return '<p class="hint">Hizmet kartlarını düzenleyin; sıralamak için okları kullanın. Bitince alttaki Kaydet\'e basın.</p>' + S.services.map((s, i) => `
+    <div class="card">
+      <label>İkon</label><div class="icopick"><i class="fas fa-${esc(s.icon)}"></i><select data-p="services.${i}.icon">${ICONS.map(x => `<option ${x === s.icon ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+      <label>Başlık</label><input data-p="services.${i}.title" value="${esc(s.title)}" maxlength="80">
+      <label>Açıklama</label><textarea data-p="services.${i}.text" maxlength="300">${esc(s.text)}</textarea>
+      <div class="row">${mv('services', i)}</div></div>`).join('') +
+    `<button class="btn gold" data-add="services"><i class="fas fa-plus"></i> Yeni hizmet ekle</button>`;
+}
+
+function vGallery() {
+  return '<p class="hint">Fotoğraf yükleyin (otomatik küçültülür). Dikey (3:4) fotoğraflar en iyi görünür.</p><div class="grid">' + S.gallery.map((g, i) => `
+    <div class="card"><img class="thumb" src="${esc(g.src)}" alt="">
+      <label>Alt yazı</label><input data-p="gallery.${i}.label" value="${esc(g.label)}" maxlength="60">
+      <div class="row">${mv('gallery', i)}</div></div>`).join('') + `</div>
+    <div class="row"><label class="btn gold" style="margin:0;cursor:pointer;color:#000"><i class="fas fa-upload"></i> Fotoğraf yükle<input id="file" type="file" accept="image/*" multiple hidden></label></div>`;
+}
+
+function vContent() {
+  return '<p class="hint">Sitedeki ana metinler ve iletişim bilgileri.</p><div class="card">' + FIELDS.map(([k, n, t]) =>
+    `<label>${n}</label>` + (t === 't' ? `<textarea data-p="content.${k}">${esc(S.content[k])}</textarea>` : `<input data-p="content.${k}" value="${esc(S.content[k])}">`)).join('') + '</div>';
+}
+
+// Genel girdi bağlama: data-p="services.0.title"
+$('#view').addEventListener('input', e => {
+  const p = e.target.dataset.p; if (!p) return;
+  const a = p.split('.'); let o = S; for (let i = 0; i < a.length - 1; i++) o = o[a[i]];
+  o[a[a.length - 1]] = e.target.value;
+  if (a[2] === 'icon') e.target.parentNode.querySelector('i').className = 'fas fa-' + e.target.value;
+});
+$('#view').addEventListener('click', async e => {
+  const t = e.target.closest('button,label'); if (!t) return;
+  if (t.dataset.act) {
+    if (t.dataset.act === 'delete' && !confirm('Bu yorum kalıcı olarak silinsin mi?')) return;
+    try { const j = await api('admin/comment', 'POST', { id: t.dataset.id, action: t.dataset.act }); S.comments = j.comments; render(); toast('Tamam'); } catch (er) { toast(er.message, 1); }
+  } else if (t.dataset.mv) {
+    const [p, i, d] = t.dataset.mv.split(':'), a = S[p], j = +i + +d;
+    if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; render();
+  } else if (t.dataset.rm) {
+    const [p, i] = t.dataset.rm.split(':'); if (confirm('Silinsin mi?')) { S[p].splice(i, 1); render(); }
+  } else if (t.dataset.add) {
+    S.services.push({ icon: 'star', title: 'Yeni hizmet', text: '' }); render();
+  }
+});
+$('#view').addEventListener('change', async e => {
+  if (e.target.id !== 'file') return;
+  toast('Yükleniyor...');
+  try {
+    for (const f of e.target.files) { const j = await api('admin/upload', 'POST', { dataUrl: await shrink(f) }); S.gallery.push({ src: j.src, label: 'Yeni fotoğraf' }); }
+    render(); toast('Yüklendi — Kaydet\'e basmayı unutmayın');
+  } catch (er) { toast(er.message || 'Yüklenemedi', 1); }
+});
+function shrink(f) {
+  return new Promise((res, rej) => {
+    const im = new Image(), u = URL.createObjectURL(f);
+    im.onload = () => { const r = Math.min(1, 1000 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = im.width * r; c.height = im.height * r; c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg', .82)); };
+    im.onerror = () => rej(new Error('Görsel okunamadı')); im.src = u;
+  });
+}
+
+$('#save').onclick = async () => {
+  const b = $('#save'); b.disabled = true;
+  try { await api('admin/data', 'PUT', { content: S.content, services: S.services, gallery: S.gallery }); toast('Kaydedildi ✓'); } catch (er) { toast(er.message, 1); }
+  b.disabled = false;
+};
+
+if (token) start();
+</script>
+</body>
+</html>
