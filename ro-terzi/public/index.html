@@ -557,6 +557,10 @@
     .comment-form button{border:none;cursor:pointer;font:inherit;font-weight:600}
     #cMsg{font-size:.95rem;min-height:1.2em}
     .gallery-item img{object-fit:cover}
+    .btn-row{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center}
+    .ig-btn{background:linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888);color:#fff}
+    .ig-btn:hover{background:linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888);filter:brightness(1.1)}
+    .ig-btn[hidden]{display:none}
   </style>
 </head>
 <body>
@@ -716,7 +720,10 @@
           <div class="contact-detail"><i class="fas fa-phone-alt"></i> <span id="cPhone">+90 543 211 49 49 </span></div>
           <div class="contact-detail"><i class="fas fa-envelope"></i> <span id="cMail">murat.karadas3547@gmail.com</span></div>
           <div class="contact-detail"><i class="fas fa-map-marker-alt"></i> <span id="cAddr">Konak, Kemeralti, Şırnak P8, Anafartalar Cd. No:218, İzmir</span></div>
+          <div class="btn-row">
           <a href="https://wa.me/905432114949?text=Merhaba,%20RO%20Terzi'den%20randevu%20almak%20istiyorum." target="_blank" id="waBtn" class="whatsapp-btn"><i class="fab fa-whatsapp"></i> WhatsApp'tan Randevu Al</a>
+          <a id="igBtn" class="whatsapp-btn ig-btn" href="#" target="_blank" rel="noopener" hidden><i class="fab fa-instagram"></i> Instagram</a>
+        </div>
         </div>
         <div class="map-container">
           <iframe
@@ -833,6 +840,8 @@
       if (ap[1]) ap[1].textContent = c.about2;
       $('#cPhone').textContent = c.phone; $('#cMail').textContent = c.email; $('#cAddr').textContent = c.address;
       $('#waBtn').href = 'https://wa.me/' + String(c.whatsapp).replace(/\D/g, '') + "?text=Merhaba,%20RO%20Terzi'den%20randevu%20almak%20istiyorum.";
+      const ig = $('#igBtn'), igUrl = String(c.instagram || '');
+      if (/^https:\/\//i.test(igUrl)) { ig.href = igUrl; ig.hidden = false; } else { ig.hidden = true; }
       $('#servicesGrid').innerHTML = d.services.map(s => `<div class="service-card fade-up-scroll visible"><div class="service-icon"><i class="fas fa-${esc(s.icon)}"></i></div><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div>`).join('');
       $('#galleryGrid').innerHTML = d.gallery.map(g => `<div class="gallery-item fade-up-scroll visible"><img src="${esc(g.src)}" alt="${esc(g.label)}" loading="lazy"><div class="gallery-overlay"><i class="fas fa-search-plus"></i> ${esc(g.label)}</div></div>`).join('');
       $('#tSlider').innerHTML = d.comments.map(t => `<div class="testimonial-card"><p class="testimonial-text">"${esc(t.text)}"</p><p class="testimonial-name">— ${esc(t.name)}</p></div>`).join('');

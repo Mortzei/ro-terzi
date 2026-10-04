@@ -75,7 +75,8 @@ const ICONS = ['tshirt','cut','drafting-compass','ruler-combined','user-tie','ge
 const FIELDS = [
   ['heroTop','Ana başlık – 1. satır','i'],['heroGold','Ana başlık – altın renkli kısım','i'],['heroBottom','Ana başlık – son kelime','i'],
   ['heroText','Ana sayfa alt metni','t'],['about1','Hakkımızda – 1. paragraf','t'],['about2','Hakkımızda – 2. paragraf','t'],
-  ['phone','Telefon','i'],['email','E-posta','i'],['address','Adres','t'],['whatsapp','WhatsApp numarası (905xxxxxxxxx)','i']];
+  ['phone','Telefon','i'],['email','E-posta','i'],['address','Adres','t'],['whatsapp','WhatsApp numarası (905xxxxxxxxx)','i'],
+  ['instagram','Instagram profil linki (örn: https://www.instagram.com/kullaniciadi) — boş bırakırsan buton gizlenir','i']];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let S = null, tab = 'comments', token = sessionStorage.getItem('t');

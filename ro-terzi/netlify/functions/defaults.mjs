@@ -9,7 +9,8 @@ export default {
   "phone": "+90 543 211 49 49",
   "email": "murat.karadas3547@gmail.com",
   "address": "Konak, Kemeralti, Şırnak P8, Anafartalar Cd. No:218, İzmir",
-  "whatsapp": "905432114949"
+  "whatsapp": "905432114949",
+  "instagram": ""
  },
  "services": [
   {

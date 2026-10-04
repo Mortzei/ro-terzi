@@ -21,6 +21,24 @@ function authed(req) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+// ---- E-posta bildirimi (Resend). Ayarlı değilse sessizce atlanır ----
+const h = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+async function notify(name, text, origin) {
+  const key = process.env.RESEND_API_KEY, to = process.env.NOTIFY_EMAIL;
+  if (!key || !to) return;
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { authorization: "Bearer " + key, "content-type": "application/json" },
+      body: JSON.stringify({
+        from: "RO Terzi <onboarding@resend.dev>", to: [to], subject: "Yeni yorum onay bekliyor",
+        html: `<p><b>${h(name)}</b> yeni bir yorum yazdı:</p><blockquote>${h(text)}</blockquote><p><a href="${origin}/admin">Panele gir ve onayla</a></p>`,
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch {}
+}
+
 // ---- Veri ----
 async function load() {
   const s = st();
@@ -50,6 +68,7 @@ export default async (req) => {
     if (comments.filter((c) => !c.approved).length >= 200) return J({ error: "busy" }, 429);
     comments.unshift({ id: crypto.randomUUID(), name, text, date: new Date().toISOString(), approved: false });
     await s.setJSON("comments", comments);
+    await notify(name, text, new URL(req.url).origin);
     return J({ ok: true });
   }
 
@@ -82,6 +101,7 @@ export default async (req) => {
     const cur = (await load()).site;
     const content = {};
     for (const k of Object.keys(D.content)) content[k] = cut(body.content?.[k] ?? cur.content[k], 800);
+    if (!/^https:\/\/[^\s"'<>]+$/i.test(content.instagram)) content.instagram = "";
     const services = (body.services || []).slice(0, 20).map((x) => ({
       icon: /^[a-z-]{2,30}$/.test(x.icon) ? x.icon : "star", title: cut(x.title, 80), text: cut(x.text, 300),
     }));
